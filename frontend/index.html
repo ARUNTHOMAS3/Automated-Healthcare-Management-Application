@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Healthcare Management Dashboard</title>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    nav {
+      background-color: #0078d7;
+      color: white;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    main {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #0078d7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #0078d7;
+      color: white;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #0078d7;
+      color: white;
+      margin-top: 50px;
+    }
+
+    #message {
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h2>Healthcare Management</h2>
+  </nav>
+
+  <main>
+    <section class="card">
+      <h3>System Status</h3>
+      <p id="message">✅ System is running smoothly!</p>
+    </section>
+
+    <section class="card">
+      <h3>Patient Records</h3>
+      <table id="patients">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Condition</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 Healthcare Management System | Powered by DevOps 🚀</p>
+  </footer>
+
+  <script>
+    const patients = [
+      { id: 1, name: "Alice Johnson", age: 34, condition: "Diabetes" },
+      { id: 2, name: "Mark Lee", age: 28, condition: "Hypertension" },
+      { id: 3, name: "Sophia Kim", age: 45, condition: "Asthma" },
+      { id: 4, name: "David Brown", age: 52, condition: "Heart Disease" },
+    ];
+
+    const tbody = document.querySelector("#patients tbody");
+
+    function loadPatients() {
+      patients.forEach((p) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${p.id}</td>
+          <td>${p.name}</td>
+          <td>${p.age}</td>
+          <td>${p.condition}</td>`;
+        tbody.appendChild(row);
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", loadPatients);
+  </script>
+</body>
+</html>

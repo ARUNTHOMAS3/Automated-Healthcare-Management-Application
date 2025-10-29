@@ -1,0 +1,131 @@
+---
+- name: Deploy Healthcare Backend to AKS
+  hosts: localhost
+
+  # 🔧 Use your vars file
+  vars_files:
+    - vars.yml
+
+  # 🔧 Force Ansible to use the virtual environment Python
+  vars:
+    ansible_python_interpreter: "{{ lookup('env', 'VIRTUAL_ENV') | default('/usr/bin/python3', true) }}/bin/python"
+    K8S_AUTH_VERIFY_SSL: no
+    k8s_validate_certs: no
+
+  environment:
+    KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+    K8S_AUTH_VERIFY_SSL: "no"
+
+  pre_tasks:
+    - name: Create temporary directory for manifests
+      file:
+        path: "{{ lookup('env', 'HOME') }}/k8s-manifests"
+        state: directory
+        mode: '0755'
+
+    - name: Copy Kubernetes manifests to temporary directory
+      copy:
+        src: "{{ item }}"
+        dest: "{{ lookup('env', 'HOME') }}/k8s-manifests/"
+      with_fileglob:
+        - "k8s_manifests/*.yml"
+
+    # ✅ Install Python dependencies inside the venv (not system)
+    - name: Ensure required Python packages are installed
+      pip:
+        name:
+          - kubernetes
+          - openshift
+        state: present
+      vars:
+        ansible_python_interpreter: "{{ lookup('env', 'VIRTUAL_ENV') }}/bin/python"
+
+  tasks:
+    - name: Get AKS credentials
+      command: az aks get-credentials --resource-group "{{ resource_group }}" --name "{{ aks_cluster_name }}" --overwrite-existing
+      register: aks_credentials
+      changed_when: false
+
+    - name: Apply Kubernetes Namespace
+      kubernetes.core.k8s:
+        state: present
+        src: "{{ lookup('env', 'HOME') }}/k8s-manifests/namespace.yml"
+        validate_certs: no
+      register: namespace_result
+
+    - name: Wait for namespace to be active
+      kubernetes.core.k8s_info:
+        kind: Namespace
+        name: "{{ k8s_namespace }}"
+        wait: yes
+        wait_timeout: 60
+        validate_certs: no
+      register: namespace_status
+      until: namespace_status.resources[0].status.phase == "Active"
+      retries: 10
+      delay: 5
+
+    - name: Apply Image Pull Secret
+      kubernetes.core.k8s:
+        state: present
+        src: k8s_manifests/imagepullsecret.yml
+        validate_certs: no
+      register: secret_result
+
+    - name: Deploy Backend
+      kubernetes.core.k8s:
+        state: present
+        src: k8s_manifests/backend-deployment.yml
+        wait: yes
+        wait_timeout: 300
+        validate_certs: no
+      register: deployment_result
+
+    - name: Wait for backend deployment to be ready
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        name: healthcare-backend
+        namespace: "{{ k8s_namespace }}"
+        wait: yes
+        wait_timeout: 300
+        validate_certs: no
+      register: deployment_status
+      until: deployment_status.resources[0].status.availableReplicas is defined and
+             deployment_status.resources[0].status.availableReplicas == deployment_status.resources[0].spec.replicas
+      retries: 30
+      delay: 10
+
+    - name: Expose Backend Service
+      kubernetes.core.k8s:
+        state: present
+        src: k8s_manifests/backend-service.yml
+        validate_certs: no
+      register: service_result
+
+    - name: Wait for LoadBalancer IP
+      kubernetes.core.k8s_info:
+        api_version: v1
+        kind: Service
+        name: healthcare-backend-service
+        namespace: "{{ k8s_namespace }}"
+        validate_certs: no
+      register: service_status
+      until: service_status.resources[0].status.loadBalancer.ingress is defined
+      retries: 30
+      delay: 10
+
+    - name: Display Service IP
+      debug:
+        msg: "✅ Backend service is available at: {{ service_status.resources[0].status.loadBalancer.ingress[0].ip }}"
+      when: service_status.resources[0].status.loadBalancer.ingress is defined
+
+    # 🧩 Optional: Verify pods status
+    - name: Verify all pods in namespace are running
+      command: kubectl get pods -n {{ k8s_namespace }}
+      register: pod_status
+      changed_when: false
+
+    - name: Show pod status
+      debug:
+        msg: "{{ pod_status.stdout_lines }}"

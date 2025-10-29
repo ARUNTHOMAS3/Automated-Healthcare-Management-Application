@@ -1,0 +1,82 @@
+---
+- name: Deploy Healthcare Backend to AKS
+  hosts: localhost
+  vars_files:
+    - vars.yml
+  environment:
+    KUBECONFIG: "{{ lookup('env', 'HOME') }}/.kube/config"
+  vars:
+    ansible_python_interpreter: python3
+
+  pre_tasks:
+    - name: Create temporary directory for manifests
+      file:
+        path: "{{ lookup('env', 'HOME') }}/k8s-manifests"
+        state: directory
+        mode: '0755'
+
+    - name: Copy Kubernetes manifests to temporary directory
+      copy:
+        src: "{{ item }}"
+        dest: "{{ lookup('env', 'HOME') }}/k8s-manifests/"
+      with_fileglob:
+        - "k8s_manifests/*.yml"
+
+  tasks:
+    - name: Get AKS credentials
+      command: az aks get-credentials --resource-group "{{ resource_group }}" --name "{{ aks_cluster_name }}" --overwrite-existing
+      register: aks_credentials
+      changed_when: false
+
+    - name: Create namespace
+      command: kubectl apply -f k8s_manifests/namespace.yml
+      args:
+        chdir: "{{ lookup('env', 'HOME') }}/healthcare-devops-temp/ansible"
+      register: namespace_result
+      changed_when: namespace_result.rc == 0
+
+    - name: Wait for namespace to be active
+      command: kubectl get namespace "{{ k8s_namespace }}"
+      register: namespace_status
+      until: "'Active' in namespace_status.stdout"
+      retries: 10
+      delay: 5
+      changed_when: false
+
+    - name: Apply Image Pull Secret
+      command: kubectl apply -f k8s_manifests/imagepullsecret.yml
+      args:
+        chdir: "{{ lookup('env', 'HOME') }}/healthcare-devops-temp/ansible"
+      register: secret_result
+      changed_when: secret_result.rc == 0
+
+    - name: Deploy Backend
+      command: kubectl apply -f k8s_manifests/backend-deployment.yml
+      args:
+        chdir: "{{ lookup('env', 'HOME') }}/healthcare-devops-temp/ansible"
+      register: deployment_result
+      changed_when: deployment_result.rc == 0
+
+    - name: Wait for backend deployment to be ready
+      command: kubectl -n "{{ k8s_namespace }}" rollout status deployment/healthcare-backend
+      register: deployment_status
+      changed_when: false
+
+    - name: Expose Backend Service
+      command: kubectl apply -f k8s_manifests/backend-service.yml
+      args:
+        chdir: "{{ lookup('env', 'HOME') }}/healthcare-devops-temp/ansible"
+      register: service_result
+      changed_when: service_result.rc == 0
+
+    - name: Wait for LoadBalancer IP
+      command: kubectl -n "{{ k8s_namespace }}" get service healthcare-backend-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+      register: service_ip
+      until: service_ip.stdout != ""
+      retries: 30
+      delay: 10
+      changed_when: false
+
+    - name: Display Service IP
+      debug:
+        msg: "Service IP: {{ service_ip.stdout }}"

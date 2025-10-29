@@ -1,0 +1,22 @@
+# vars.yml
+# Variables used for deploying the Healthcare DevOps App
+
+# Azure resource names (these should match your Terraform setup)
+resource_group: devops-rg
+aks_cluster_name: devops-aks
+acr_name: healthcaredevops25acr
+
+# Kubernetes namespace where the app will be deployed
+k8s_namespace: healthcare-app
+
+# Container image details
+container_image: healthcaredevops25acr.azurecr.io/healthcare-backend:latest
+
+# Kubernetes deployment settings
+replica_count: 2
+container_port: 3000
+service_port: 80
+service_type: LoadBalancer
+
+# Optional image pull secret (used to pull image from private ACR)
+image_pull_secret_name: acr-secret

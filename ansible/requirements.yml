@@ -1,0 +1,4 @@
+# ansible/requirements.yml
+collections:
+  - name: community.kubernetes
+  - name: azure.azcollection
