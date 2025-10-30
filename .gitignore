@@ -1,2 +1,6 @@
-node_modules
+# Terraform sensitive files
+*.tfstate
+*.tfstate.backup
 .terraform/
+crash.log
+terraform.tfvars
