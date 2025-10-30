@@ -1,6 +1,77 @@
-# Terraform sensitive files
+.venv-ansible/
+.venv/
+__pycache__/
+*.pyc
+# Terraform specific
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+.terraform.lock.hcl
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.python-version
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+*.cpython-*.pyc
+
+# Virtual Environment
+ansible-venv/
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Docker
+.docker/
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Ansible
+*.retry
 *.tfstate
 *.tfstate.backup
-.terraform/
-crash.log
-terraform.tfvars

@@ -1,61 +1,58 @@
+# Azure Authentication Variables
+variable "arm_subscription_id" {
+  description = "Azure Subscription ID"
+  type        = string
+}
+
 variable "arm_client_id" {
-  description = "Azure Service Principal client ID"
+  description = "Azure Client ID"
   type        = string
 }
 
 variable "arm_client_secret" {
-  description = "Azure Service Principal client secret"
+  description = "Azure Client Secret"
   type        = string
-}
-
-variable "arm_subscription_id" {
-  description = "Azure subscription ID"
-  type        = string
+  sensitive   = true
 }
 
 variable "arm_tenant_id" {
-  description = "Azure tenant ID"
+  description = "Azure Tenant ID"
   type        = string
 }
 
+# Resource Variables
 variable "resource_group_name" {
-  description = "Name of the resource group"
+  description = "Resource Group Name"
   type        = string
-  default     = "devops-rg"
 }
 
 variable "location" {
-  description = "Azure region for resources"
+  description = "Azure Region"
   type        = string
-  default     = "East US"
 }
 
 variable "acr_name" {
-  description = "Name of the Azure Container Registry"
+  description = "Azure Container Registry Name"
   type        = string
-  default     = "healthcaredevops25acr"
 }
 
+# AKS Variables
 variable "aks_cluster_name" {
-  description = "Name of the AKS cluster"
+  description = "AKS Cluster Name"
   type        = string
-  default     = "devops-aks"
 }
 
 variable "dns_prefix" {
-  description = "DNS prefix for AKS cluster"
+  description = "DNS prefix for AKS"
   type        = string
-  default     = "devopsapp"
 }
 
 variable "node_count" {
-  description = "Number of nodes in the AKS cluster"
+  description = "Number of nodes in AKS cluster"
   type        = number
-  default     = 1
 }
 
 variable "node_vm_size" {
   description = "VM size for AKS nodes"
   type        = string
-  default     = "Standard_B2s"
 }
