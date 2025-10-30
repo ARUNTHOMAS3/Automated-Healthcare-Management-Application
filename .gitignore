@@ -1,4 +1,5 @@
 .venv-ansible/
+ansible-venv/
 .venv/
 __pycache__/
 *.pyc
