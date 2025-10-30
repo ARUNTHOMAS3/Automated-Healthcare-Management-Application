@@ -1,6 +1,16 @@
 {
+  "name": "healthcare-webapp",
+  "version": "1.0.0",
+  "description": "Healthcare Management Application",
+  "main": "frontend/server.js",
+  "scripts": {
+    "start": "node frontend/server.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

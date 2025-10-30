@@ -47,15 +47,38 @@ resource "azurerm_kubernetes_cluster" "aks" {
     os_disk_type = "Managed"
   }
 
-
-
-
   identity {
     type = "SystemAssigned"
   }
+}
 
-  role_based_access_control_enabled = true
-  sku_tier                          = "Free"
+# App Service Plan
+resource "azurerm_service_plan" "app_plan" {
+  name                = "healthcare-app-plan"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  os_type            = "Linux"
+  sku_name           = "B1"
+}
+
+# Azure Web App
+resource "azurerm_linux_web_app" "webapp" {
+  name                = "healthcare-webapp-arun2025"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_service_plan.app_plan.location
+  service_plan_id     = azurerm_service_plan.app_plan.id
+
+  site_config {
+    application_stack {
+      node_version = "18-lts"
+    }
+    always_on = true
+  }
+
+  app_settings = {
+    "WEBSITE_NODE_DEFAULT_VERSION" = "18-lts"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "true"
+  }
 }
 
 # Give AKS permission to pull from ACR
